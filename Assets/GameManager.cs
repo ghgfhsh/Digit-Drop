@@ -41,9 +41,18 @@ public class GameManager : MonoBehaviour
     private int score = 0;
     [SerializeField] private TMPro.TMP_Text scoreText;
 
+    public bool isGameOver = false;
+    [SerializeField] private GameObject gameOverScreen;
+
     private void Start()
     {
         currentMoveSpeed = fallSpeed;
+    }
+
+    public void GameOver()
+    {
+        isGameOver = true;
+        gameOverScreen.SetActive(true);
     }
 
     public void SetSpeedMode(SpeedMode speedMode)

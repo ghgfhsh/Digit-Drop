@@ -80,9 +80,14 @@ public class DigitSquare : MonoBehaviour
             FallOneSpace();
         else
         {
+
             GameManager.Instance.digitSquareBeingControlled = null;
             //all the if statements below check if the surrounding blocks have the same number as this one, if they do move them inwards and double by the amount of blocks moved int
 
+            if (currentPos.y == gameGrid.gridInfo.gridHeight - 2)
+            {
+                GameManager.Instance.GameOver();
+            }
 
             if (surroundingDigitSquares.below != null && surroundingDigitSquares.below.digitValue == digitValue)
             {

@@ -12,7 +12,7 @@ public class DigitSquareSpawner : MonoBehaviour
 
     private void Update()
     {
-        if (GameManager.Instance.digitSquareBeingControlled == null && GameManager.Instance.digitsMoving == 0 && !waitingToSpawn)
+        if (GameManager.Instance.digitSquareBeingControlled == null && GameManager.Instance.digitsMoving == 0 && !waitingToSpawn && !GameManager.Instance.isGameOver)
         {
             StartCoroutine(spawnDigitSquare());
         }
