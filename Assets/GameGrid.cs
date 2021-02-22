@@ -11,7 +11,11 @@ public class GameGrid : MonoBehaviour
     public Vector2[,] digitSquarePositions { get; private set; }
     public GridInfo gridInfo = new GridInfo(5, 7); //height and width must be a odd number if someone changes this
 
-    public Transform test;
+    public Transform gridCanvas;
+
+    public GameObject playareaBackgroundFirstColor;
+    public GameObject playareaBackgroundSecondColor;
+    public GameObject topLayerArrow;
 
 
     private void Start()
@@ -21,11 +25,13 @@ public class GameGrid : MonoBehaviour
         CreateVector2Points();
     }
 
-    public void SpawnSquare(int posX, GameObject square, int value)
+    public void SpawnDigit(int posX, GameObject square, int value)
     {
-        digitSquares[posX, gridInfo.topRow] = Instantiate(square, digitSquarePositions[posX, gridInfo.topRow], Quaternion.identity, test).GetComponent<DigitSquare>();
+        digitSquares[posX, gridInfo.topRow] = Instantiate(square, digitSquarePositions[posX, gridInfo.topRow], Quaternion.identity, gridCanvas).GetComponent<DigitSquare>();
+        GameManager.Instance.digitSquareBeingControlled = digitSquares[posX, gridInfo.topRow];
         digitSquares[posX, gridInfo.topRow].SetDigit(value);
         digitSquares[posX, gridInfo.topRow].OnSpawn(new Coord(posX, gridInfo.topRow), this);
+
     }
 
     private void DeleteAllDigitSquares()
@@ -48,18 +54,45 @@ public class GameGrid : MonoBehaviour
             for (int y = 0; y < gridInfo.gridHeight; y++)
             {
                 digitSquarePositions[x, y] = new Vector2(transform.position.x + x * xSpacing, transform.position.y + y * ySpacing);
+                SpawnBackground(x, y);
             }
         }
     }
 
+    private void SpawnBackground(int x, int y)
+    {
+        GameObject tmpO;
+        if (y != gridInfo.gridHeight - 1)
+        {
+            if(x % 2 == 0)
+                tmpO = Instantiate(playareaBackgroundFirstColor, digitSquarePositions[x, y], Quaternion.identity, gridCanvas);
+            else
+                tmpO = Instantiate(playareaBackgroundSecondColor, digitSquarePositions[x, y], Quaternion.identity, gridCanvas);
+            tmpO.transform.localScale *= new Vector2(xSpacing, ySpacing);
+        }
+        else
+        {
+            if (x % 2 == 0)
+                tmpO = Instantiate(playareaBackgroundSecondColor, digitSquarePositions[x, y], Quaternion.identity, gridCanvas);
+            else
+                tmpO = Instantiate(playareaBackgroundFirstColor, digitSquarePositions[x, y], Quaternion.identity, gridCanvas);
+            tmpO.transform.localScale *= new Vector2(xSpacing, ySpacing);
+            tmpO.transform.localScale *= new Vector2(1, .9f);
+
+            Instantiate(topLayerArrow, digitSquarePositions[x, y], Quaternion.identity, gridCanvas);
+        }
+
+        tmpO.GetComponent<PlayerInput>().SetXPos(x);
+    }
+
     public DigitSquare.SurroundingDigitSquares GetSurroundingDigitSquares(Coord pos)
     {
-        GameManager.Instance.digitsMoving--;
 
 
         DigitSquare left;
         DigitSquare right;
         DigitSquare below;
+        DigitSquare above;
 
         //check that there is a grid spot to the left if so assign it
         if (pos.x - 1 >= 0)
@@ -79,26 +112,42 @@ public class GameGrid : MonoBehaviour
         else
             below = null;
 
-        return new DigitSquare.SurroundingDigitSquares(left, right, below);
+        if(below != null)
+        {
+            below.SetSquareAbove(digitSquares[pos.x, pos.y]);
+        }
+
+        return new DigitSquare.SurroundingDigitSquares(left, right, below, null);
     }
 
-    public void MoveDigitSquarePosition(Coord oldPos, Coord newPos)
+    public void ShiftPos(Coord oldPos, Coord newPos)
     {
+        digitSquares[newPos.x, newPos.y] = digitSquares[oldPos.x, oldPos.y];
+        digitSquares[oldPos.x, oldPos.y] = null;
+    }
 
+    public void CalculateDigitSquarePositionChange(Coord oldPos, Coord newPos, DigitSquare digitSquare)
+    {
         //if the space is null then it is falling, otherwise it is doubling the digit it is moving towards and destorying itself
         if (digitSquares[newPos.x, newPos.y] == null)
         {
-            digitSquares[newPos.x, newPos.y] = digitSquares[oldPos.x, oldPos.y];
+            digitSquares[newPos.x, newPos.y] = digitSquare;
             digitSquares[oldPos.x, oldPos.y] = null;
         }
         else
         {
-
             digitSquares[newPos.x, newPos.y].doubleDigit();
-            Destroy(digitSquares[oldPos.x, oldPos.y].gameObject);
+            GameObject objToDestroy= digitSquares[oldPos.x, oldPos.y].gameObject;
             digitSquares[oldPos.x, oldPos.y] = null;
-
-            digitSquares[newPos.x, newPos.y].UpdateSurroundingDigitSquares();
+            objToDestroy.GetComponent<DigitSquare>().UpdateAbove(digitSquares[newPos.x, newPos.y]);
+            for (int y = oldPos.y + 1; y < gridInfo.gridHeight; y++)
+            {
+                if (digitSquares[oldPos.x, y] != null)
+                    digitSquares[oldPos.x, y].GetComponent<DigitSquare>().FallOneSpace();
+            }
+            //objToDestroy.GetComponent<DigitSquare>().UpdateAbove(digitSquares[newPos.x, newPos.y]);
+            Destroy(objToDestroy);
+            digitSquares[newPos.x, newPos.y].CheckSurroundingDigitSquares();
         }
 
     }
