@@ -318,7 +318,7 @@ public class DigitSquare : MonoBehaviour
         Vector2 newPos = new Vector3(GameManager.Instance.spawnPoints[xPos].position.x, transform.position.y, transform.position.z);
         float direction = (newPos - (Vector2)raycastPoint.transform.position).x;
 
-        var hit = Physics2D.Raycast(raycastPoint.position, new Vector2(direction, 0f), Mathf.Infinity, layerMask : LayerMask.GetMask("DigitSquare"));
+        var hit = Physics2D.Raycast(raycastPoint.position, new Vector2(direction, 0f), Vector2.Distance(newPos, transform.position), layerMask : LayerMask.GetMask("DigitSquare"));
 
         if(!hit)
         {

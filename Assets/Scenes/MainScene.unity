@@ -248,6 +248,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Play Area Background Second Color (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 1220137172793440701, guid: 92acb0dfcca17e349a9fa3879a53e654,
+        type: 3}
+      propertyPath: xPos
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 3529399592901488140, guid: 92acb0dfcca17e349a9fa3879a53e654,
         type: 3}
       propertyPath: m_SortingOrder
@@ -355,7 +360,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &123231008
 MonoBehaviour:
@@ -795,7 +800,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &527416712
 PrefabInstance:
@@ -1217,6 +1222,49 @@ Transform:
   m_Father: {fileID: 1040302580}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &604773057
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 604773059}
+  - component: {fileID: 604773058}
+  m_Layer: 10
+  m_Name: PlayerInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &604773058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 604773057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e65658b149c88c419409de84d724da2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &604773059
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 604773057}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.500498, y: 0.932225, z: -201.34727}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &964677855 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3215551706995986025, guid: 7d3d2994fdf8d4f4f8823cd7b7223567,
@@ -1357,7 +1405,7 @@ RectTransform:
   - {fileID: 462990420}
   - {fileID: 1619905496}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -1673,7 +1721,7 @@ RectTransform:
   - {fileID: 1485369532}
   - {fileID: 48531257}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -1843,6 +1891,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1040302580}
     m_Modifications:
+    - target: {fileID: -4736676655302139624, guid: 02ed1f9a99f4d504886339ef942b890c,
+        type: 3}
+      propertyPath: xPos
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 2186444688784078505, guid: 02ed1f9a99f4d504886339ef942b890c,
         type: 3}
       propertyPath: m_SortingOrder
@@ -2145,7 +2198,7 @@ MonoBehaviour:
   digitSquareBeingControlled: {fileID: 0}
   fallSpeed: 1.6
   fallSpeedFaster: 3
-  combineSpeed: 3
+  combineSpeed: 4
   difficultyLevel: 4
   scoreText: {fileID: 1485369533}
   isGameOver: 0
@@ -2240,6 +2293,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Play Area Background Second Color
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220137172793440701, guid: 92acb0dfcca17e349a9fa3879a53e654,
+        type: 3}
+      propertyPath: xPos
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5669180326271216063, guid: 92acb0dfcca17e349a9fa3879a53e654,
         type: 3}
@@ -2378,7 +2436,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1859095319
 PrefabInstance:
@@ -2387,6 +2445,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1040302580}
     m_Modifications:
+    - target: {fileID: -4736676655302139624, guid: 02ed1f9a99f4d504886339ef942b890c,
+        type: 3}
+      propertyPath: xPos
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 2186444688784078505, guid: 02ed1f9a99f4d504886339ef942b890c,
         type: 3}
       propertyPath: m_SortingOrder
