@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerInput : MonoBehaviour
 {
-    int xPos;
+    [SerializeField]private int xPos;
 
     public void SetXPos(int xPos)
     {
@@ -16,10 +16,6 @@ public class PlayerInput : MonoBehaviour
         if(GameManager.Instance.digitSquareBeingControlled != null)
         {
             GameManager.Instance.digitSquareBeingControlled.PlayerShiftPos(xPos);
-        }
-
-        if (GameManager.Instance.currentSpeedMode != GameManager.SpeedMode.combine)
-        {
             GameManager.Instance.SetSpeedMode(GameManager.SpeedMode.fallingFaster);
         }
     }

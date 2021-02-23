@@ -8,19 +8,124 @@ public class DigitSquare : MonoBehaviour
     int digitValue;
     [SerializeField]SpriteRenderer spriteRenderer;
 
+    private Rigidbody2D rb;
+
     //moving info
     private bool isMoving = false;
     
     //posInfo
-    private Coord currentPos;
-    private GameGrid gameGrid;
-    private SurroundingDigitSquares surroundingDigitSquares;
+    private SurroundingDigitSquares surroundingDigitSquares = new SurroundingDigitSquares(null, null, null, null);
+    [SerializeField] Transform raycastPoint;
 
     //cache
-    private Vector3 nextPosVector3;
-    private Coord nextPosCoord;
+    private DigitSquare digitSquareToDouble;
 
-    private bool isCombiningUp = false;
+    //state
+    bool justSpawned = true;
+    bool isFalling;
+    bool isplayingAnimation = false;
+    [SerializeField]bool isFrozen = false;
+    bool isCombiningDown = false;
+    bool isUnfreezeTimerActive = false;
+
+    //position checks
+    [SerializeField]private Transform rightPoint;
+    [SerializeField] private Transform leftPoint;
+    [SerializeField] private Transform belowPoint;
+    [SerializeField] private Transform abovePoint;
+
+    [SerializeField]public bool debug = false;
+
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        GameManager.Instance.digitSquareBeingControlled = this;
+        rb.velocity = Vector2.down * GameManager.Instance.currentMoveSpeed;
+        isFalling = true;
+        GameManager.Instance.digitsMoving++;
+    }
+
+    private void FixedUpdate()
+    {
+        if (GameManager.Instance.isGameOver)
+            this.enabled = false;
+
+
+        //don't do anything while the animation is playing
+        if (isFrozen)
+        {
+            rb.velocity = Vector2.zero;
+            return;
+        }
+
+        if(rb.velocity.magnitude <= .5f)
+        {
+            //when the digit first stops moving after being spawned remove it from the current digit being controlled
+            if (justSpawned)
+            {
+                GameManager.Instance.digitSquareBeingControlled = null;
+                justSpawned = false;
+            }
+
+            //when it first stops isfalling is toggled and it triggers check surrounding squares
+            if (isFalling)
+            {
+                isFalling = false;
+                Debug.Log("stopped");
+                GameManager.Instance.digitsMoving--;
+                CheckSurroundingDigitSquares();
+            }
+        }
+        else
+        {
+            if(!isFalling)
+                GameManager.Instance.digitsMoving++;
+            isFalling = true;
+        }
+
+            rb.velocity = Vector2.down * GameManager.Instance.currentMoveSpeed;
+
+    }
+
+    private void Update()
+    {
+        if (GameManager.Instance.isGameOver)
+            this.enabled = false;
+
+        PrintSurroundingDigits(); //Debug code
+
+        if (isplayingAnimation)
+        {
+            if(transform.position != digitSquareToDouble.gameObject.transform.position)
+                transform.position = Vector3.MoveTowards(transform.position, digitSquareToDouble.gameObject.transform.position, GameManager.Instance.fallSpeed * Time.deltaTime);
+            else
+            {
+                digitSquareToDouble.doubleDigit();
+                digitSquareToDouble.StartUnfreezeTimer();
+                GameManager.Instance.digitsMoving--;
+
+
+                //since when combining down the digitsquare being doubled is not moving, it needs to be told to check the squares around it after doubling
+                if (isCombiningDown)
+                {
+                }
+
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    private void PrintSurroundingDigits()
+    {
+        if (debug == true)
+        {
+            Debug.Log("Left: " + (surroundingDigitSquares.left == null ? "none" : surroundingDigitSquares.left.digitValue.ToString()) +
+            ", Right: " + (surroundingDigitSquares.right == null ? "none" : surroundingDigitSquares.right.digitValue.ToString()) +
+            ", Below: " + (surroundingDigitSquares.below == null ? "none" : surroundingDigitSquares.below.digitValue.ToString()) +
+            ", Below: " + (surroundingDigitSquares.above == null ? "none" : surroundingDigitSquares.above.digitValue.ToString()));
+            debug = false;
+        }
+    }
 
     public void SetDigit(int value)
     {
@@ -34,153 +139,196 @@ public class DigitSquare : MonoBehaviour
         gameObject.GetComponentInChildren<TMPro.TMP_Text>().text = value.ToString();
     }
 
-    public void doubleDigit()
+    private void doubleDigit()
     {
         GameManager.Instance.AddScore(digitValue * GameManager.Instance.digitsMoving);
         SetDigit(digitValue * 2);
     }
 
-    public void OnSpawn(Coord spawnPos, GameGrid gameGrid)
+    private void FreezeDigit()
     {
-        this.gameGrid = gameGrid;
-        currentPos = spawnPos;
+        rb.velocity = Vector2.zero;
+        rb.simulated = false;
+        isFrozen = true;
+    }
+
+    private void UnfreezeDigit()
+    {
+        rb.simulated = true;
+        isFrozen = false;
+        isplayingAnimation = false;
+        isUnfreezeTimerActive = false;
         CheckSurroundingDigitSquares();
     }
 
-    private void Update()
+    private void StartUnfreezeTimer()
     {
-        if (isMoving)
-            MovingToNextPos();
+        if (!isUnfreezeTimerActive)
+        {
+            isUnfreezeTimerActive = true;
+            StartCoroutine(UnfreezeTimer());
+        }
     }
 
-    public void UpdateAbove(DigitSquare digitSquare)
+    IEnumerator UnfreezeTimer()
     {
-         if (surroundingDigitSquares.above != null)
-            surroundingDigitSquares.above.CheckSurroundingDigitSquares();
+        yield return new WaitForSeconds(.2f);
+        UnfreezeDigit();
+        yield return null;
     }
 
-    private void SetDigitSquareGridPos(Coord newPos)
+    private void UpdateSurroundingDigitSquares()
     {
-        GameManager.Instance.digitsMoving--;
-        gameGrid.CalculateDigitSquarePositionChange(currentPos, newPos, this);
-        currentPos = newPos;
-        CheckSurroundingDigitSquares();
+        //update right
+        var hit = Physics2D.OverlapCircle(rightPoint.position, 0.1f, LayerMask.GetMask("DigitSquare"));
+        if (hit)
+            surroundingDigitSquares.right = hit.GetComponent<DigitSquare>();
+        else
+            surroundingDigitSquares.right = null;
+
+        //update left
+        hit = Physics2D.OverlapCircle(leftPoint.position, 0.1f, LayerMask.GetMask("DigitSquare"));
+        if (hit)
+            surroundingDigitSquares.left = hit.GetComponent<DigitSquare>();
+        else
+            surroundingDigitSquares.left = null;
+
+        //update above
+        hit = Physics2D.OverlapCircle(abovePoint.position, 0.1f, LayerMask.GetMask("DigitSquare"));
+        if (hit)
+            surroundingDigitSquares.above = hit.GetComponent<DigitSquare>();
+        else
+            surroundingDigitSquares.above = null;
+
+        //update below
+        hit = Physics2D.OverlapCircle(belowPoint.position, 0.1f, LayerMask.GetMask("DigitSquare"));
+        if (hit)
+            surroundingDigitSquares.below = hit.GetComponent<DigitSquare>();
+        else
+            surroundingDigitSquares.below = null;
+
     }
 
-    public void SetSquareAbove(DigitSquare digitSquare)
+    private void CheckSurroundingDigitSquares()
     {
-        surroundingDigitSquares.above = digitSquare;
-    }
+        UpdateSurroundingDigitSquares();
+        bool foundCombination = false;
 
-    public void CheckSurroundingDigitSquares()
-    {
-        surroundingDigitSquares = gameGrid.GetSurroundingDigitSquares(currentPos);
+        if (surroundingDigitSquares.above != null && surroundingDigitSquares.above.tag == "LoseGameTrigger")
+            Debug.Log("Lost Game");
 
-        if (surroundingDigitSquares.below == null && currentPos.y > 0 && !isCombiningUp) // check if there is an empty space below it if so start falling
-            FallOneSpace();
+        if (surroundingDigitSquares.left == null && surroundingDigitSquares.right == null && surroundingDigitSquares.below != null && surroundingDigitSquares.below.digitValue == digitValue)  //shift down animation
+        {
+            foundCombination = true;
+            isCombiningDown = true;
+            Combine(surroundingDigitSquares.below);
+        }
         else
         {
-
-            GameManager.Instance.digitSquareBeingControlled = null;
-            //all the if statements below check if the surrounding blocks have the same number as this one, if they do move them inwards and double by the amount of blocks moved int
-
-            if (currentPos.y == gameGrid.gridInfo.gridHeight - 2)
+            if(surroundingDigitSquares.left != null && surroundingDigitSquares.left.digitValue == digitValue)
             {
-                GameManager.Instance.GameOver();
-            }
-
-            if (surroundingDigitSquares.below != null && surroundingDigitSquares.below.digitValue == digitValue)
-            {
-                if ((surroundingDigitSquares.right == null || surroundingDigitSquares.right.digitValue != digitValue) && (surroundingDigitSquares.left == null || surroundingDigitSquares.left.digitValue != digitValue))
-                    CombineDown();
-                else
-                    surroundingDigitSquares.below.CombineUp();
+                foundCombination = true;
+                surroundingDigitSquares.left.Combine(this);
             }
 
             if (surroundingDigitSquares.right != null && surroundingDigitSquares.right.digitValue == digitValue)
             {
-                surroundingDigitSquares.right.CombineLeft();
+                foundCombination = true;
+                surroundingDigitSquares.right.Combine(this);
             }
 
-            if (surroundingDigitSquares.left != null && surroundingDigitSquares.left.digitValue == digitValue)
+            if (surroundingDigitSquares.below != null && surroundingDigitSquares.below.digitValue == digitValue)
             {
-                surroundingDigitSquares.left.CombineRight();
+                foundCombination = true;
+                surroundingDigitSquares.below.Combine(this);
             }
         }
-    }
 
-
-    public void PlayerShiftPos(int position)
-    {
-        if (gameGrid.digitSquares[position, currentPos.y] == null)
+        if (!foundCombination)
         {
-            Coord newPos = new Coord(position, currentPos.y);
-
-            nextPosVector3 = gameGrid.digitSquarePositions[position, nextPosCoord.y];
-            gameGrid.ShiftPos(currentPos, newPos);
-            currentPos = newPos;
-            nextPosCoord = new Coord(position, nextPosCoord.y);
-            transform.position = new Vector3(nextPosVector3.x, transform.position.y, transform.position.z);
+            //checkLostGame
+            var hit = Physics2D.OverlapCircle(abovePoint.position, 0.1f, LayerMask.GetMask("LoseGameTrigger"));
+            if (hit)
+                GameManager.Instance.GameOver();
         }
     }
 
-    private void CombineRight()
+
+    private void Combine(DigitSquare digitSquare)
     {
-        GameManager.Instance.SetSpeedMode(GameManager.SpeedMode.combine);
-        MoveTowardsPosition(1, 0);
+        digitSquareToDouble = digitSquare;
+        GameManager.Instance.digitsMoving++;
+        GetComponent<BoxCollider2D>().enabled = false;
+
+        //disable functionality
+        FreezeDigit();
+        digitSquareToDouble.FreezeDigit();
+
+
+        isplayingAnimation = true;
+        GetComponent<BoxCollider2D>().enabled = false;
     }
 
-    private void CombineLeft()
+    public void AddSurroundingDigitSquare(DigitSquareTrigger.DigitSquareTriggerSide digitSquareTriggerSide, DigitSquare digitSquare)
     {
-        GameManager.Instance.SetSpeedMode(GameManager.SpeedMode.combine);
-        MoveTowardsPosition(-1, 0);
-    }
-
-    private void CombineUp()
-    {
-        isCombiningUp = true;
-        GameManager.Instance.SetSpeedMode(GameManager.SpeedMode.combine);
-        MoveTowardsPosition(0, 1);
-    }
-
-    private void CombineDown()
-    {
-        GameManager.Instance.SetSpeedMode(GameManager.SpeedMode.combine);
-        MoveTowardsPosition(0, -1);
-    }
-
-    //this function will set is falling to true making the block fall one space
-    public void FallOneSpace()
-    {
-        GameManager.Instance.SetSpeedMode(GameManager.SpeedMode.falling);
-        MoveTowardsPosition(0, -1);
-    }
-
-    void MoveTowardsPosition(int changeX, int changeY)
-    {
-        nextPosVector3 = gameGrid.digitSquarePositions[currentPos.x + changeX, currentPos.y + changeY];
-        nextPosCoord = new Coord(currentPos.x + changeX, currentPos.y + changeY);
-        if (isMoving == false && !isCombiningUp)
+        switch (digitSquareTriggerSide)
         {
-            GameManager.Instance.digitsMoving++;
+            case DigitSquareTrigger.DigitSquareTriggerSide.left:
+                surroundingDigitSquares.left = digitSquare;
+                break;
+            case DigitSquareTrigger.DigitSquareTriggerSide.right:
+                surroundingDigitSquares.right = digitSquare;
+                break;
+            case DigitSquareTrigger.DigitSquareTriggerSide.below:
+                surroundingDigitSquares.below = digitSquare;
+                break;
+            case DigitSquareTrigger.DigitSquareTriggerSide.above:
+                surroundingDigitSquares.above = digitSquare;
+                break;
         }
-        isMoving = true;
     }
 
-    void MovingToNextPos()
+    public void RemoveSurroundingDigitSquare(DigitSquareTrigger.DigitSquareTriggerSide digitSquareTriggerSide, DigitSquare digitSquare)
     {
-        if(transform.position != nextPosVector3)
+        //ontrigger enter will be called first so the surrounding digit square will be changed. There for when ontriggerexit calls if there was no new square, 
+        //it will be the same one being removed instead of the new one 
+        switch (digitSquareTriggerSide)
         {
-            transform.position = Vector3.MoveTowards(transform.position, nextPosVector3, GameManager.Instance.currentMoveSpeed * Time.deltaTime);
+            case DigitSquareTrigger.DigitSquareTriggerSide.left:
+                if (surroundingDigitSquares.left == digitSquare)
+                    surroundingDigitSquares.left = null;
+                break;
+            case DigitSquareTrigger.DigitSquareTriggerSide.right:
+                if (surroundingDigitSquares.right == digitSquare)
+                    surroundingDigitSquares.right = null;
+                break;
+            case DigitSquareTrigger.DigitSquareTriggerSide.below:
+                if (surroundingDigitSquares.below == digitSquare)
+                    surroundingDigitSquares.below = null;
+                break;
+            case DigitSquareTrigger.DigitSquareTriggerSide.above:
+                if (surroundingDigitSquares.above == digitSquare && rb.simulated == true)
+                    surroundingDigitSquares.above = null;
+                break;
+        }
+    }
+
+    public void PlayerShiftPos(int xPos)
+    {
+        Vector2 newPos = new Vector3(GameManager.Instance.spawnPoints[xPos].position.x, transform.position.y, transform.position.z);
+        float direction = (newPos - (Vector2)raycastPoint.transform.position).x;
+
+        var hit = Physics2D.Raycast(raycastPoint.position, new Vector2(direction, 0f), Mathf.Infinity, layerMask : LayerMask.GetMask("DigitSquare"));
+
+        if(!hit)
+        {
+            Debug.Log("safe");
+            transform.position = newPos;
         }
         else
-        {          
-            isMoving = false;
-            if (surroundingDigitSquares.above != null)
-            {
-                surroundingDigitSquares.above.UpdateAbove(this);
-            }
-            SetDigitSquareGridPos(nextPosCoord);
+        {
+            Debug.Log(hit.collider.gameObject.name);
+            Debug.Log("Unsafe");
         }
     }
 

@@ -24,6 +24,8 @@ public class GameManager : MonoBehaviour
 
     public Sprite[] digitSquareSprites;
 
+    [SerializeField] public List<Transform> spawnPoints;
+
 
     //game state
     public int digitsMoving = 0;
@@ -31,9 +33,9 @@ public class GameManager : MonoBehaviour
 
     //fall speed
     public float currentMoveSpeed { get; private set; }
-    [SerializeField] private float fallSpeed;
+    [SerializeField] public float fallSpeed;
     [SerializeField] private float fallSpeedFaster;
-    [SerializeField] private float combineSpeed;
+    [SerializeField] public float combineSpeed;
     public SpeedMode currentSpeedMode { get; private set; } = SpeedMode.falling;
 
     public int difficultyLevel = 4;
