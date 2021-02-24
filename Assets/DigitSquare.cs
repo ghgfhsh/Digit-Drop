@@ -217,7 +217,9 @@ public class DigitSquare : MonoBehaviour
         if (surroundingDigitSquares.above != null && surroundingDigitSquares.above.tag == "LoseGameTrigger")
             Debug.Log("Lost Game");
 
-        if (surroundingDigitSquares.left == null && surroundingDigitSquares.right == null && surroundingDigitSquares.below != null && surroundingDigitSquares.below.digitValue == digitValue)  //shift down animation
+        if ((surroundingDigitSquares.left == null || surroundingDigitSquares.left.digitValue != digitValue) && 
+            (surroundingDigitSquares.right == null || surroundingDigitSquares.right.digitValue != digitValue) && 
+            surroundingDigitSquares.below != null && surroundingDigitSquares.below.digitValue == digitValue)  //shift down animation
         {
             foundCombination = true;
             isCombiningDown = true;
